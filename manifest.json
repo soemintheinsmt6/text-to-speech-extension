@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Read Aloud - Text to Speech",
+  "version": "1.5.0",
+  "description": "Convert any text to speech. Select text and right-click, use a keyboard shortcut, or paste text into the popup.",
+  "permissions": [
+    "tts",
+    "contextMenus",
+    "activeTab",
+    "scripting",
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "https://translate.google.com/*",
+    "https://speech.platform.bing.com/*",
+    "https://www.bing.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Read Aloud - Text to Speech",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "read-selection": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Read selected text aloud"
+    },
+    "stop-reading": {
+      "suggested_key": {
+        "default": "Alt+Shift+X"
+      },
+      "description": "Stop reading"
+    }
+  }
+}

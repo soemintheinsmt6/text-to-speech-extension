@@ -1,0 +1,205 @@
+/* Read Aloud CSS - Premium Dark Theme */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  color: #f3f4f6;
+  background: #111827; /* sleek dark background */
+}
+
+header {
+  padding: 16px;
+  background: linear-gradient(135deg, #6366f1, #a855f7); /* vibrant gradient */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+}
+
+main {
+  padding: 16px;
+  background: #111827;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  padding: 12px;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: none;
+  background: #1f2937; /* deep dark background for inputs */
+  color: #f9fafb;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+textarea::placeholder {
+  color: #6b7280;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #818cf8;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 0 12px;
+  display: inline-block;
+  transition: color 0.15s ease;
+}
+
+.link-btn:hover {
+  color: #a5b4fc;
+}
+
+.row {
+  margin-bottom: 14px;
+  background: #1f2937;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.row label {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #d1d5db;
+}
+
+.row label span {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  background: #111827;
+  color: #f9fafb;
+  font: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+select:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+optgroup {
+  background: #111827;
+  color: #f3f4f6;
+  font-weight: 600;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #818cf8;
+  cursor: pointer;
+  height: 6px;
+  border-radius: 3px;
+  background: #374151;
+  outline: none;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.controls button {
+  flex: 1;
+  padding: 10px 0;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  background: #1f2937;
+  color: #f3f4f6;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.controls button:hover:not(:disabled) {
+  background: #374151;
+  border-color: #4b5563;
+  transform: translateY(-1px);
+}
+
+.controls button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.controls .primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.controls .primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+}
+
+.hint {
+  margin-top: 16px;
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.6;
+  text-align: center;
+  border-top: 1px solid #374151;
+  padding-top: 12px;
+}
+
+kbd {
+  background: #374151;
+  color: #f9fafb;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}

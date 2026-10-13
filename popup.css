@@ -111,6 +111,19 @@ select {
   transition: all 0.2s ease;
 }
 
+input[type="password"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  background: #111827;
+  color: #f9fafb;
+  font: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+input[type="password"]:focus,
 select:focus {
   border-color: #818cf8;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);

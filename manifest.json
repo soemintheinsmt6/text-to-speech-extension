@@ -12,6 +12,7 @@
     "offscreen"
   ],
   "host_permissions": [
+    "https://soemintheinsmt6-myanmar-voxcpm2.hf.space/*",
     "https://translate.google.com/*",
     "https://speech.platform.bing.com/*",
     "https://www.bing.com/*"

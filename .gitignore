@@ -6,6 +6,10 @@
 .idea/
 *.swp
 
+# Python backend
+.venv/
+__pycache__/
+
 # Node (if build tooling is ever added)
 node_modules/
 

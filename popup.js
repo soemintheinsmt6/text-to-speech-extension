@@ -10,6 +10,7 @@ const els = {
   rateVal: document.getElementById("rateVal"),
   pitchVal: document.getElementById("pitchVal"),
   volumeVal: document.getElementById("volumeVal"),
+  hfToken: document.getElementById("hfToken"),
   speak: document.getElementById("speak"),
   pause: document.getElementById("pause"),
   stop: document.getElementById("stop"),
@@ -18,6 +19,7 @@ const els = {
 let paused = false;
 
 const CLOUD_VOICES = {
+  "voxcpm2-neutral": { lang: "my", name: "Myanmar - Neutral (VoxCPM2 Hugging Face)" },
   "my-MM-NilarNeural": { lang: "my", name: "Myanmar - Female (Cloud)" },
   "my-MM-ThihaNeural": { lang: "my", name: "Myanmar - Male (Cloud)" },
   "km-KH-SreymomNeural": { lang: "km", name: "Khmer - Female (Cloud)" },
@@ -57,9 +59,9 @@ function loadVoices() {
       def.textContent = "System default";
       frag.appendChild(def);
 
-      // Add Cloud Neural Voices group
+      // Add AI and cloud voices group
       const cloudGroup = document.createElement("optgroup");
-      cloudGroup.label = "Cloud Neural Voices (Natural)";
+      cloudGroup.label = "Myanmar AI / Cloud Voices";
       Object.keys(CLOUD_VOICES).forEach((key) => {
         const opt = document.createElement("option");
         opt.value = key;
@@ -95,6 +97,9 @@ async function restoreSettings() {
   els.rate.value = s.rate;
   els.pitch.value = s.pitch;
   els.volume.value = s.volume;
+  // The token stays in local storage so it is never synced to other devices.
+  const { hfToken } = await chrome.storage.local.get({ hfToken: "" });
+  els.hfToken.value = hfToken;
 }
 
 function currentSettings() {
@@ -137,6 +142,9 @@ function syncPlaybackState() {
   input.addEventListener("change", saveSettings);
 });
 els.voice.addEventListener("change", saveSettings);
+els.hfToken.addEventListener("change", () => {
+  chrome.storage.local.set({ hfToken: els.hfToken.value.trim() });
+});
 
 els.grab.addEventListener("click", () => {
   chrome.runtime.sendMessage({ type: "getSelection" }, (res) => {

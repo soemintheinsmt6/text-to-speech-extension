@@ -13,10 +13,19 @@ let queue = [];
 let index = 0;
 let session = 0; // bump to invalidate an in-flight queue
 
+const VOXCPM2_VOICE = "voxcpm2-neutral";
+const VOXCPM2_SPACE = "https://soemintheinsmt6-myanmar-voxcpm2.hf.space";
+const VOXCPM2_VOICE_DESCRIPTION =
+  "A calm adult Burmese speaker with a neutral, warm, " +
+  "natural human voice and clear pronunciation";
+
+let hfToken = "";
+
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.target !== "offscreen") return;
   switch (msg.type) {
     case "offscreen-play":
+      hfToken = msg.hfToken || "";
       if (msg.queue) {
         startQueue(msg.queue, msg.rate, msg.pitch, msg.volume);
       } else {
@@ -59,13 +68,32 @@ async function playNextQueue(mySession, rate, pitch, volume) {
   const item = queue[index++];
   if (item.voice) {
     try {
-      const blob = await synthesizeNeural(item.text, item.voice, rate, pitch);
+      let blob;
+      let applyPlaybackRate = false;
+      if (item.voice === VOXCPM2_VOICE) {
+        try {
+          blob = await synthesizeVoxCPM2(item.text);
+          applyPlaybackRate = true;
+        } catch (err) {
+          diag(`VoxCPM2 failed, trying the Myanmar cloud voice: ${err?.message || err}`);
+          blob = await synthesizeNeural(
+            item.text,
+            "my-MM-ThihaNeural",
+            rate,
+            pitch
+          );
+        }
+      } else {
+        blob = await synthesizeNeural(item.text, item.voice, rate, pitch);
+      }
       if (mySession !== session) return;
 
       const blobUrl = URL.createObjectURL(blob);
       audio = new Audio(blobUrl);
-      // rate/pitch are already baked into the SSML prosody — don't apply twice.
-      audio.playbackRate = 1;
+      // Cloud rate/pitch are baked into SSML. VoxCPM returns plain WAV audio,
+      // so apply the speed locally while preserving the generated pitch.
+      audio.playbackRate = applyPlaybackRate ? rate : 1;
+      audio.preservesPitch = true;
       audio.volume = volume;
       audio.onended = () => {
         URL.revokeObjectURL(blobUrl);
@@ -91,6 +119,79 @@ async function playNextQueue(mySession, rate, pitch, volume) {
   } else {
     playGoogleFallback(item.text, item.lang, mySession, rate, pitch, volume);
   }
+}
+
+// The Hugging Face ZeroGPU Space speaks Gradio's queue API: POST the inputs to
+// get an event id, read the server-sent event stream until "complete", then
+// download the generated WAV file it points to.
+async function synthesizeVoxCPM2(text) {
+  const controller = new AbortController();
+  // ZeroGPU may need to wake the Space and wait in the GPU queue first.
+  const timeoutId = setTimeout(() => controller.abort(), 300000);
+  // Anonymous ZeroGPU calls get almost no quota; the token bills the user's own.
+  // Like gradio_client, send it as X-HF-Authorization: ZeroGPU ignores a plain
+  // Authorization header on public Spaces.
+  const auth = hfToken ? { "X-HF-Authorization": `Bearer ${hfToken}` } : {};
+  const callUrl = `${VOXCPM2_SPACE}/gradio_api/call/tts`;
+  try {
+    const submit = await fetch(callUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...auth },
+      body: JSON.stringify({ data: [text, VOXCPM2_VOICE_DESCRIPTION] }),
+      signal: controller.signal,
+    });
+    if (!submit.ok) {
+      const detail = (await submit.text()).slice(0, 300);
+      throw new Error(`HTTP ${submit.status}${detail ? `: ${detail}` : ""}`);
+    }
+    const { event_id: eventId } = await submit.json();
+    if (!eventId) throw new Error("The Space did not return an event id");
+
+    const stream = await fetch(`${callUrl}/${eventId}`, {
+      headers: auth,
+      signal: controller.signal,
+    });
+    if (!stream.ok) throw new Error(`HTTP ${stream.status} while waiting for the result`);
+    const file = parseGradioResult(await stream.text());
+
+    const fileUrl = file.url || `${VOXCPM2_SPACE}/gradio_api/file=${file.path}`;
+    const res = await fetch(fileUrl, { headers: auth, signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status} while downloading the audio`);
+    const blob = await res.blob();
+    if (blob.size < 200) throw new Error("The Space returned empty audio");
+    await assertDecodable(blob);
+    return blob;
+  } catch (err) {
+    if (err?.name === "AbortError") {
+      throw new Error("The Space took longer than 5 minutes");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// Returns the output FileData from a finished Gradio event stream, or throws
+// the Space's error message (e.g. "ZeroGPU quota exceeded").
+function parseGradioResult(body) {
+  for (const block of body.split(/\r?\n\r?\n/)) {
+    const event = block.match(/^event: *(.*)$/m)?.[1]?.trim();
+    const data = block.match(/^data: *(.*)$/m)?.[1];
+    if (event === "complete") {
+      const file = JSON.parse(data)?.[0];
+      if (!file?.path && !file?.url) throw new Error("The Space returned no audio file");
+      return file;
+    }
+    if (event === "error") {
+      let message = "The Space reported an error";
+      try {
+        const parsed = JSON.parse(data);
+        message = parsed?.error || parsed?.title || message;
+      } catch {}
+      throw new Error(message);
+    }
+  }
+  throw new Error("The Space closed the stream without a result");
 }
 
 // Try the neural backends in the order most likely to succeed for this browser.

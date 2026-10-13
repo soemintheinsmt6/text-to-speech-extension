@@ -22,6 +22,7 @@ const SCRIPT_LANGS = [
 ];
 
 const CLOUD_VOICES = {
+  "voxcpm2-neutral": { lang: "my", name: "Myanmar - Neutral (VoxCPM2 Hugging Face)" },
   "my-MM-NilarNeural": { lang: "my", name: "Myanmar - Female (Cloud)" },
   "my-MM-ThihaNeural": { lang: "my", name: "Myanmar - Male (Cloud)" },
   "km-KH-SreymomNeural": { lang: "km", name: "Khmer - Female (Cloud)" },
@@ -40,7 +41,7 @@ const CLOUD_VOICES = {
 
 function getDefaultCloudVoice(lang) {
   switch (lang) {
-    case "my": return "my-MM-ThihaNeural";
+    case "my": return "voxcpm2-neutral";
     case "km": return "km-KH-SreymomNeural";
     case "lo": return "lo-LA-KeomanyNeural";
     case "si": return "si-LK-ThiliniNeural";
@@ -70,12 +71,22 @@ chrome.runtime.onInstalled.addListener(async () => {
     contexts: ["all"],
   });
   const { voiceName } = await chrome.storage.sync.get({ voiceName: "" });
+  const myanmarVoice = ["voxcpm2-neutral", "my-MM-ThihaNeural", "my-MM-NilarNeural"]
+    .includes(voiceName) ? voiceName : "voxcpm2-neutral";
+  chrome.contextMenus.create({
+    id: "voice-voxcpm2-neutral",
+    parentId: "voice-menu",
+    title: "VoxCPM2 neutral (Hugging Face) — default",
+    type: "radio",
+    checked: myanmarVoice === "voxcpm2-neutral",
+    contexts: ["all"],
+  });
   chrome.contextMenus.create({
     id: "voice-my-MM-ThihaNeural",
     parentId: "voice-menu",
-    title: "Thiha (male) — default",
+    title: "Thiha (male cloud fallback)",
     type: "radio",
-    checked: voiceName !== "my-MM-NilarNeural",
+    checked: myanmarVoice === "my-MM-ThihaNeural",
     contexts: ["all"],
   });
   chrome.contextMenus.create({
@@ -83,7 +94,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     parentId: "voice-menu",
     title: "Nilar (female)",
     type: "radio",
-    checked: voiceName === "my-MM-NilarNeural",
+    checked: myanmarVoice === "my-MM-NilarNeural",
     contexts: ["all"],
   });
 });
@@ -94,7 +105,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
     speak(info.selectionText);
   } else if (id === "stop-reading") {
     stopAll();
-  } else if (id.startsWith("voice-my-")) {
+  } else if (id.startsWith("voice-my-") || id === "voice-voxcpm2-neutral") {
     chrome.storage.sync.set({ voiceName: id.slice("voice-".length) });
   }
 });
@@ -230,11 +241,15 @@ async function speakRemote(text, lang, voice, settings) {
     voice: voice
   }));
 
+  // Offscreen documents cannot read chrome.storage, so pass the token along.
+  const { hfToken } = await chrome.storage.local.get({ hfToken: "" });
+
   await ensureOffscreen();
   remotePlaying = true;
   chrome.runtime.sendMessage({
     type: "offscreen-play",
     target: "offscreen",
+    hfToken,
     queue,
     rate: clamp(Number(settings.rate) || 1, 0.25, 4),
     pitch: clamp(Number(settings.pitch) || 1, 0.5, 2),
